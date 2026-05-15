@@ -115,7 +115,7 @@ st.sidebar.markdown(
 # ──────────────────────────────────────────────────────────────────────────────
 # CARGA
 # ──────────────────────────────────────────────────────────────────────────────
-with st.spinner("Cargando Parquet (226,446 minutos)…"):
+with st.spinner("Cargando Parquet (meses estables Sep–Ene)…"):
     df = cargar_datos()
 
 st.title(seleccion_label)
@@ -144,16 +144,27 @@ if viz_key == "hist":
 
     fig = make_subplots(rows=3, cols=3, subplot_titles=[l for l, _, _ in grupos])
 
+    # Ejes con clip p1-p99 para que outliers extremos no aplasten la distribución
+    RANGE_OVERRIDE = {
+        "I":     (0, 65535),   # mantener overflow ADC visible
+        "Dleft": (2160, 2200), # solo rango operativo (excluye arranque ~23mm)
+    }
+
     for idx, (label, col, color) in enumerate(grupos):
         row, col_pos = divmod(idx, 3)
         s = df[col].dropna()
         media = s.mean()
         mediana = s.median()
 
+        # Clip p1-p99 para visualización (los datos originales no se modifican)
+        lo = RANGE_OVERRIDE.get(col, (s.quantile(0.01), None))[0]
+        hi = RANGE_OVERRIDE.get(col, (None, s.quantile(0.99)))[1]
+        s_plot = s[(s >= lo) & (s <= hi)] if hi is not None else s[s >= lo]
+
         fig.add_trace(
             go.Histogram(
-                x=s,
-                nbinsx=80,
+                x=s_plot,
+                nbinsx=60,
                 marker_color=color,
                 opacity=0.85,
                 name=label,
@@ -161,14 +172,14 @@ if viz_key == "hist":
             ),
             row=row + 1, col=col_pos + 1,
         )
-        # Media
+        # Media (sobre datos completos)
         fig.add_vline(
             x=media, line_dash="dash", line_color="red", line_width=1.5,
             annotation_text=f"μ={media:.2f}", annotation_font_size=9,
             annotation_position="top right",
             row=row + 1, col=col_pos + 1,
         )
-        # Mediana
+        # Mediana (sobre datos completos)
         fig.add_vline(
             x=mediana, line_dash="dot", line_color="black", line_width=1.5,
             annotation_text=f"med={mediana:.2f}", annotation_font_size=9,
@@ -178,8 +189,8 @@ if viz_key == "hist":
 
     fig.update_layout(
         height=820,
-        title_text=f"Histogramas — Distribuciones sobre {len(df):,} minutos (6 meses)",
-        title_font_size=14,
+        title_text=f"Histogramas — Distribuciones sobre {len(df):,} minutos · rango p1–p99 (outliers excluidos del gráfico, no de los datos)",
+        title_font_size=13,
         bargap=0.05,
     )
     st.plotly_chart(fig, use_container_width=True)
@@ -194,7 +205,7 @@ if viz_key == "hist":
 | **H1** | Estrecha / sesgada | Solo 10 mV de rango total; meses cálidos en el lado derecho |
 | **V1** | Bimodal clara | Reposo ~20 mV · flujo activo ~25–40 mV |
 | **R**  | Sesgo extremo derecho | >99% en baseline ~0.11 mm; picos = lluvia real |
-| **P**  | Spike en borde izq. | Valores reales −2.9 kPa; eje 0–300 kPa distorsionado por outliers |
+| **P**  | Campana centrada en −2.9 kPa | Distribución real visible con clip p1-p99. Sin clip el eje 0–300 aplasta todo por un outlier de 325 kPa |
 | **Dleft** | Spike en borde der. | Rango operativo ~2174 mm; barra tiny en 0 = arranque |
 | **I**  | J invertida | Mediana=920 lux (noche); media=9,150 lux jalada por el sol |
 | **Ax_rms** | Log-normal, sesgo derecho | Ruido base ~0.006 g; cola hasta 3 g = eventos vibratorios |
