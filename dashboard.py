@@ -196,19 +196,19 @@ if viz_key == "hist":
     st.plotly_chart(fig, use_container_width=True)
 
     st.markdown("""
-**Interpretaciones clave:**
+**Interpretaciones — lo que muestra cada histograma (rango p1–p99):**
 
-| Sensor | Forma | Observación |
-|--------|-------|-------------|
-| **T1** | Asimétrica negativa | Pico en 17–18°C; cola hacia frío (enero). Media < Mediana |
-| **T5** | Multimodal irregular | ~5 picos a lo largo de 0–25°C; std=6.9°C (3× mayor que T1) |
-| **H1** | Estrecha / sesgada | Solo 10 mV de rango total; meses cálidos en el lado derecho |
-| **V1** | Bimodal clara | Reposo ~20 mV · flujo activo ~25–40 mV |
-| **R**  | Sesgo extremo derecho | >99% en baseline ~0.11 mm; picos = lluvia real |
-| **P**  | Campana centrada en −2.9 kPa | Distribución real visible con clip p1-p99. Sin clip el eje 0–300 aplasta todo por un outlier de 325 kPa |
-| **Dleft** | Spike en borde der. | Rango operativo ~2174 mm; barra tiny en 0 = arranque |
-| **I**  | J invertida | Mediana=920 lux (noche); media=9,150 lux jalada por el sol |
-| **Ax_rms** | Log-normal, sesgo derecho | Ruido base ~0.006 g; cola hasta 3 g = eventos vibratorios |
+| Sensor | Forma visible | Lo que significa |
+|--------|--------------|-----------------|
+| **T1** | Rampa ascendente de izq. a der., pico en 16–17°C | Asimetría negativa: media(≈15.6) < mediana(≈16.4). La mayoría del tiempo el talud estuvo en verano cálido; los pocos días fríos de enero jalan la media hacia abajo |
+| **T5** | Multimodal irregular, ~6 picos entre 2 y 22°C | Media ≈ Mediana (≈12°C) porque los picos están distribuidos en ambos extremos. Std muy alto (≈6.9°C): posibles archivos con sensor desconectado en invierno |
+| **H1** | Dos grupos: izq. 0.106–0.107 V (frío) · der. 0.108–0.110 V (cálido) | Rango total solo 4 mV = 0.2% de la escala 0–2 V. Sigue el ciclo térmico, no la humedad. Confirma que H1 es un termómetro de circuito |
+| **V1** | Bimodal clara: pico alto en ~21 mV + joroba en ~27–32 mV | Media(≈24) > Mediana(≈21.5): la segunda joroba jala la media a la derecha. Dos regímenes: reposo (~21 mV) y flujo subterráneo activo (~27–32 mV) |
+| **R**  | Campana estrecha centrada en 0.110–0.113 mm + pequeño grupo en 0.115–0.117 | Con clip p1-p99 se ve la variación del baseline del pluviómetro. El grupo derecho son eventos de lluvia leve. Los eventos intensos (>0.12 mm) quedan fuera del p99 |
+| **P**  | Campana casi simétrica centrada en −2.9 kPa, rango −3.2 a −2.7 kPa | Toda la distribución es negativa = succión mátrica del suelo no saturado. Si P se acerca a 0 durante lluvia intensa, el talud pierde estabilidad. El outlier de 325 kPa queda fuera del p99 |
+| **Dleft** | Concentrado en 2172–2182 mm con pequeño grupo secundario en 2185–2195 mm | Rango operativo real de solo ~23 mm. El grupo secundario refleja expansión térmica de verano. El artefacto de arranque (~23 mm) queda fuera del p1 |
+| **I**  | J invertida: spike gigante en 0–5k lux, cola plana hasta 60k lux | Mediana(≈920 lux) = el sensor está casi siempre de noche. Media(≈9,000 lux) jalada 10× por las horas de sol. Overflow ADC en 65,534 lux |
+| **Ax_rms** | Pico en 0.004–0.006 g con cola hacia 0.01 g | Con clip p1-p99 se ve el ruido de fondo del acelerómetro. La vibración real (bombeo, lluvia) supera el p99. Media ≈ Mediana ≈ 0.006 g = nivel de ruido electrónico |
 """)
 
 # ──────────────────────────────────────────────────────────────────────────────
